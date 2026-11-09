@@ -16,7 +16,24 @@ internal static class Program
         if (!isNew) return 0;
         var app = new Application { ShutdownMode=ShutdownMode.OnExplicitShutdown };
         app.DispatcherUnhandledException += (_,e) => { System.Windows.MessageBox.Show(Ui.L?["Unknown"] ?? "VoiceMite could not finish the action.","VoiceMite"); e.Handled=true; };
-        using var controller = new AppController(app,args.Contains("--demo")||args.Contains("--ui-smoke")||args.Contains("--target-smoke"));
+        var smoke=args.Contains("--ui-smoke")||args.Contains("--target-smoke");
+        string? profileRoot=null;
+        string? generatedProfileRoot=null;
+        if(smoke)
+        {
+            var profileOption=Array.IndexOf(args,"--test-profile-root");
+            if(profileOption>=0)
+            {
+                if(profileOption+1>=args.Length)return 2;
+                profileRoot=Path.GetFullPath(args[profileOption+1]);
+            }
+            else
+            {
+                generatedProfileRoot=Path.GetFullPath(Path.Combine(Path.GetTempPath(),"VoiceMiteSmoke-"+Guid.NewGuid().ToString("N")));
+                profileRoot=generatedProfileRoot;
+            }
+        }
+        using var controller = new AppController(app,args.Contains("--demo")||smoke,profileRoot);
         if(args.Contains("--target-smoke"))
         {
             var option=Array.IndexOf(args,"--target-smoke");
@@ -30,6 +47,13 @@ internal static class Program
             app.Dispatcher.BeginInvoke(async ()=>await UiSmoke.RunAsync(controller,directory));
         }
         app.Run();
+        controller.Dispose();
+        if(generatedProfileRoot is not null)
+        {
+            var tempRoot=Path.GetFullPath(Path.GetTempPath()).TrimEnd(Path.DirectorySeparatorChar)+Path.DirectorySeparatorChar;
+            if(generatedProfileRoot.StartsWith(tempRoot,StringComparison.OrdinalIgnoreCase)&&Path.GetFileName(generatedProfileRoot).StartsWith("VoiceMiteSmoke-",StringComparison.Ordinal))
+                try {if(Directory.Exists(generatedProfileRoot))Directory.Delete(generatedProfileRoot,true);}catch(IOException){}catch(UnauthorizedAccessException){}
+        }
         return UiSmoke.Failed||TargetSmoke.Failed?1:0;
     }
 }
@@ -59,10 +83,10 @@ internal sealed class AppController : IDisposable
     internal bool IsBusy => stopping || inserting || confirmingTarget || Session.State is SessionState.Transcribing or SessionState.Formatting;
     internal double Elapsed => (DateTime.UtcNow-recordStarted).TotalSeconds;
 
-    internal AppController(Application app,bool demo)
+    internal AppController(Application app,bool demo,string? profileRoot=null)
     {
         Application=app;
-        Store=new(ProfilePaths.Resolve(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),demo));
+        Store=new(ProfilePaths.Resolve(profileRoot??Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),demo));
         var loaded=Store.LoadSettings(); Settings=loaded.Value; NoticeKey=loaded.WarningCode;
         var loadedPreferences=Store.LoadPreferences();Preferences=loadedPreferences.Value;NoticeKey??=loadedPreferences.WarningCode;
         Secrets=new(Store.DirectoryPath);
