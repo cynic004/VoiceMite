@@ -21,6 +21,11 @@ internal static class TargetSmoke
         Process? fixture = null;
         Directory.CreateDirectory(reportDirectory);
         void Check(string name, bool passed, string detail = "") => results.Add(new(name, passed ? "passed" : "failed", detail));
+        void Require(string name, bool passed, string detail = "")
+        {
+            Check(name, passed, detail);
+            if (!passed) throw new InvalidOperationException("Unsafe test precondition: " + name);
+        }
         try
         {
             fixtureDll = Path.GetFullPath(fixtureDll);
@@ -50,32 +55,35 @@ internal static class TargetSmoke
             controller.ShowPanel();
             controller.Panel.SetTranscript(expected);
             await controller.RewriteAsync(InputMode.Verbatim);
-            Check("Local original-text draft is ready without API or recording", controller.Session.State == SessionState.Ready && controller.Panel.ResultText == expected && !controller.Audio.IsRecording);
+            Require("Local original-text draft is ready without API or recording", controller.Session.State == SessionState.Ready && controller.Panel.ResultText == expected && !controller.Audio.IsRecording);
 
             await controller.SelectTargetAsync();
-            Check("Target selection hides panel and waits without recording", controller.SelectingTarget && !controller.Panel.IsVisible && !controller.Audio.IsRecording && !controller.Targets.HasTarget);
+            Require("Target selection hides panel and waits without recording", controller.SelectingTarget && !controller.Panel.IsVisible && !controller.Audio.IsRecording && !controller.Targets.HasTarget);
             var orbWindow = new WindowInteropHelper(controller.Orb).Handle;
-            Check("Floating orb has WS_EX_NOACTIVATE", (GetWindowLongPtr(orbWindow, -20).ToInt64() & 0x08000000L) != 0);
+            Require("Floating orb has WS_EX_NOACTIVATE", (GetWindowLongPtr(orbWindow, -20).ToInt64() & 0x08000000L) != 0);
             var bounds = field.Current.BoundingRectangle;
-            Click(bounds.Left + bounds.Width / 2, bounds.Top + bounds.Height / 2);
+            Click(bounds.Left + bounds.Width / 2, bounds.Top + bounds.Height / 2, fixtureWindow);
             await Task.Delay(120);
-            Check("Mouse selects isolated fixture input", GetForegroundWindow() == fixtureWindow && Automation.Compare(AutomationElement.FocusedElement, field));
+            Require("Mouse selects isolated fixture input", GetForegroundWindow() == fixtureWindow && Automation.Compare(AutomationElement.FocusedElement, field));
             var foregroundBeforeOrb = GetForegroundWindow();
             var orbPoint = controller.Orb.PointToScreen(new Point(40, 40));
-            Click(orbPoint.X, orbPoint.Y); // Actual mouse message reaches FloatingWindow handlers.
+            Click(orbPoint.X, orbPoint.Y, orbWindow); // Actual mouse message reaches FloatingWindow handlers.
             var confirmed = await WaitUntilAsync(() => !controller.SelectingTarget && controller.Panel.IsVisible && (controller.Targets.HasTarget || controller.TargetCode != null), TimeSpan.FromSeconds(4));
-            Check("Orb click keeps original foreground window", foregroundBeforeOrb == fixtureWindow && GetForegroundWindow() == fixtureWindow);
-            Check("Orb click captures target through real STA worker without recording", confirmed && controller.Targets.HasTarget && controller.Session.State == SessionState.Ready && !controller.Audio.IsRecording, controller.TargetCode ?? "");
-            if (!controller.Targets.HasTarget) throw new InvalidOperationException("Real target capture failed: " + controller.TargetCode);
+            Require("Orb click keeps original foreground window", foregroundBeforeOrb == fixtureWindow && GetForegroundWindow() == fixtureWindow && Automation.Compare(AutomationElement.FocusedElement, field));
+            Require("Orb click captures target through real STA worker without recording", confirmed && controller.Targets.HasTarget && controller.Session.State == SessionState.Ready && !controller.Audio.IsRecording, controller.TargetCode ?? "");
+            // Validate while the exact fixture is foreground. A different cached window/control
+            // must fail before the test activates the review panel or attempts any paste.
+            var targetValidation = await controller.Targets.PollAsync();
+            Require("Captured target is the exact isolated fixture control", targetValidation.Success, targetValidation.Code);
 
             // Activating the tool models the user reviewing/editing and clicking Insert.
             controller.Panel.Activate();
             await Task.Delay(100);
-            Check("Review panel can take foreground before explicit insert", GetForegroundWindow() == new WindowInteropHelper(controller.Panel).Handle);
+            Require("Review panel can take foreground before explicit insert", GetForegroundWindow() == new WindowInteropHelper(controller.Panel).Handle);
             await controller.InsertAsync();
             var actual = ((ValuePattern)field.GetCurrentPattern(ValuePattern.Pattern)).Current.Value;
-            Check("Explicit insert restores target and pastes through real STA worker", actual == expected && controller.NoticeKey == "Inserted", controller.TargetCode ?? "");
-            Check("Successful insert consumes target", !controller.Targets.HasTarget);
+            Require("Explicit insert restores target and pastes through real STA worker", actual == expected && controller.NoticeKey == "Inserted", controller.TargetCode ?? "");
+            Require("Successful insert consumes target", !controller.Targets.HasTarget);
             await controller.InsertAsync();
             Check("Second insert cannot duplicate consumed target", ((ValuePattern)field.GetCurrentPattern(ValuePattern.Pattern)).Current.Value == expected && !controller.Targets.HasTarget && !controller.Audio.IsRecording);
         }
@@ -103,17 +111,22 @@ internal static class TargetSmoke
         while (clock.Elapsed < timeout) { if (predicate()) return true; await Task.Delay(30); }
         return predicate();
     }
-    private static void Click(double x, double y)
+    private static void Click(double x, double y, IntPtr expectedWindow)
     {
+        var point = new POINT { X = (int)Math.Round(x), Y = (int)Math.Round(y) };
+        if (GetAncestor(WindowFromPoint(point), 2) != expectedWindow) throw new InvalidOperationException("The isolated test click is covered by another window.");
         if (!SetCursorPos((int)Math.Round(x), (int)Math.Round(y))) throw new InvalidOperationException("Could not position test mouse.");
         INPUT[] inputs = [new() { Type = 0, Data = new InputUnion { Mouse = new MOUSEINPUT { Flags = 0x0002 } } }, new() { Type = 0, Data = new InputUnion { Mouse = new MOUSEINPUT { Flags = 0x0004 } } }];
         if (SendInput((uint)inputs.Length, inputs, Marshal.SizeOf<INPUT>()) != inputs.Length) throw new InvalidOperationException("Could not click isolated test target.");
     }
     private sealed record CheckResult(string name, string status, string detail);
+    [StructLayout(LayoutKind.Sequential)] private struct POINT { public int X, Y; }
     [StructLayout(LayoutKind.Sequential)] private struct INPUT { public uint Type; public InputUnion Data; }
     [StructLayout(LayoutKind.Explicit)] private struct InputUnion { [FieldOffset(0)] public MOUSEINPUT Mouse; }
     [StructLayout(LayoutKind.Sequential)] private struct MOUSEINPUT { public int X, Y; public uint MouseData, Flags, Time; public UIntPtr ExtraInfo; }
     [DllImport("user32.dll")] private static extern IntPtr GetForegroundWindow();
+    [DllImport("user32.dll")] private static extern IntPtr WindowFromPoint(POINT point);
+    [DllImport("user32.dll")] private static extern IntPtr GetAncestor(IntPtr window, uint flags);
     [DllImport("user32.dll", EntryPoint = "GetWindowLongPtrW")] private static extern IntPtr GetWindowLongPtr(IntPtr window, int index);
     [DllImport("user32.dll")] [return: MarshalAs(UnmanagedType.Bool)] private static extern bool SetCursorPos(int x, int y);
     [DllImport("user32.dll", SetLastError = true)] private static extern uint SendInput(uint count, INPUT[] inputs, int size);

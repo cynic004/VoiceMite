@@ -30,6 +30,11 @@
     "detail": ""
   },
   {
+    "name": "Captured target is the exact isolated fixture control",
+    "status": "passed",
+    "detail": ""
+  },
+  {
     "name": "Review panel can take foreground before explicit insert",
     "status": "passed",
     "detail": ""
