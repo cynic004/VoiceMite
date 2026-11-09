@@ -10,20 +10,21 @@
 | 核心/协议/配置兼容测试 | 通过，28 项 | 实际运行 VoiceMite.Tests；包括新配置优先、旧 VoiceInk 配置兼容、正式/演示隔离和不复制文件 |
 | 工作线程隔离 | 通过，5 项 | [结果](evidence/rebrand/worker-tests.json)；真实 STA 调度器与模拟原生服务，不等于真实输入框测试 |
 | 双语界面与控制器 | 通过，11 项 | [结果](evidence/rebrand/ui/ui-tests.json)；[中文面板](evidence/rebrand/ui/panel-zh-CN.png)、[英文面板](evidence/rebrand/ui/panel-en.png)，均为自己的 WPF 渲染 |
-| 实际图标/目标捕获/插入集成 | 通过，10 项 | [结果](evidence/rebrand/target/target-tests.json)；实际鼠标点击、不夺焦点、真实 STA 插入与防重复 |
+| 实际图标/目标捕获/插入集成 | 通过，11 项 | [源码构建结果](evidence/rebrand/target/target-tests.json)、[最终发布程序结果](evidence/rebrand/target-portable/target-tests.json)；实际鼠标点击、不夺焦点、真实 STA 插入与防重复 |
 | Windows 原生控件/录音/剪贴板/密钥 | 通过，22 项 | [结果](evidence/rebrand/windows-tests.json)；实际设备启停、WPF 目标、DPAPI 与剪贴板 |
 | Edge / 记事本 | 通过，16 项 | [结果](evidence/rebrand/external-tests.json)；Edge 本地隔离页面与新建记事本测试文件，不推广为所有网站支持 |
 | 旧密钥机制兼容 | 通过，4 项 | [结果](evidence/rebrand/legacy-profile-tests.json)；实际旧 VoiceInk 二进制加密合成测试值，新 VoiceMite 解密/替换/删除；未读取真实密钥 |
-| GitHub Actions | 通过 | [已完成运行 e7b3b92](https://github.com/cynic004/VoiceMite/actions/runs/42637877459)：Windows 构建、核心 28 项、模拟目标 STA 5 项、便携/源码打包与产物上传；不测试麦克风或云端 API |
+| GitHub Actions | 通过 | [已完成运行 1dc621a](https://github.com/cynic004/VoiceMite/actions/runs/42641161661)：Windows 构建、核心 28 项、模拟目标 STA 5 项、便携/源码打包与产物上传；不测试麦克风或云端 API |
 | 正式 AppId 安装/升级复测 | 安全停止，未执行 | [保护记录](evidence/rebrand/production-installer-guard.json)；发现已有用户 VoiceInk 安装，未覆盖、卸载或修改它 |
 | 隔离测试身份的新安装/重装/卸载 | 通过，10 项 | [结果](evidence/rebrand/install-tests.json)；实际程序二进制与正式发布一致，仅安装身份/快捷方式不同，不等于正式 AppId 已执行 |
 | 隔离身份 VoiceInk → VoiceMite 升级 | 通过，15 项 | [结果](evidence/rebrand/upgrade-tests.json)、[隔离范围与原安装保护](evidence/rebrand/isolated-installer-identity.json)；旧目录复用、已知旧文件/快捷方式清理、配置保留与卸载 |
+| 最终发布构建指纹 | 通过 | [验证元数据](evidence/rebrand/final-build-validation.json)记录实际 DLL SHA-256、源代码基线 `1dc621a`、运行库及下列重复验证范围 |
 | 最终便携版直接启动 | 通过，11 项重复验证 | [结果](evidence/rebrand/ui-portable/ui-tests.json)；实际运行自包含 VoiceMite.exe，退出码 0；不重复累加界面用例 |
 | 安装/升级后的程序启动 | 通过，11 项重复验证 | [安装启动](evidence/rebrand/installed-startup.json)、[升级后界面](evidence/rebrand/upgrade-ui-tests.json)；实际发布 DLL 哈希匹配；独立测试配置，无麦克风/API |
 | 真实中文 STT → LLM | 未测试 | 没有使用真实 API 密钥；不能用模拟服务或静音连接测试证明中文云端识别质量 |
 | Chrome、多显示器/DPI、休眠、高权限 | 未测试 | 无麦克风、系统拒绝麦克风权限及持续剪贴板占用同样未实测 |
 
-目标集成的初次运行遇到原剪贴板中存在不支持的格式，程序按设计返回 `ClipboardUnsupported` 并拒绝自动插入，[原始记录](evidence/rebrand/target/initial-clipboard-refusal.json)单独保留。采用明确的文本测试剪贴板后，未更改应用代码的复测 10 项全部通过；此保护性拒绝不被掩盖为成功粘贴。
+目标集成的初次运行遇到原剪贴板中存在不支持的格式，程序按设计返回 `ClipboardUnsupported` 并拒绝自动插入，[原始记录](evidence/rebrand/target/initial-clipboard-refusal.json)单独保留。采用明确的文本测试剪贴板后，未更改应用代码的复测 10 项全部通过；此保护性拒绝不被掩盖为成功粘贴。 随后仅加固测试工具的前置守卫：目标/焦点不匹配时立即退出，点击前核对命中窗口，并验证工作线程缓存的确为独立测试框；加固后 11 项通过。此修改不改变正常录音或文字插入路径。
 
 安装测试没有覆盖或卸载现有用户安装：生产 AppId 的预检发现已有 VoiceInk，因此停止。随后只在临时副本中替换安装 AppId、测试快捷方式名和安装器输出目录，保留实际旧/新程序二进制与升级逻辑。15 项升级测试确认旧目录被复用、六个旧文件和两个测试快捷方式被清理、新快捷方式创建、同版本重装及静默卸载保留合成数据。测试前后真实注册项和真实快捷方式保持不变；没有读写真实密钥或正式用户配置。**生产 AppId 的实际用户安装升级仍未执行**，不将隔离测试身份等同于该项通过。
 

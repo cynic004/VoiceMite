@@ -1,0 +1,24 @@
+{
+  "classification": "final-published-runtime-verification",
+  "testedAtUtc": "2026-11-09T15:12:45.0433184Z",
+  "sourceBaseCommit": "1dc621ad2204138f721bbcc575472ec8f142ebd5",
+  "productVersion": "0.1.0+1dc621ad2204138f721bbcc575472ec8f142ebd5",
+  "applicationDllSha256": "999ed42a9049ead4926c33e46289f265fc32cfeab053c63bf5c6457b4b89828e",
+  "selfContained": true,
+  "architecture": "win-x64",
+  "sdk": "10.0.403",
+  "frameworks": [
+    "Microsoft.NETCore.App 10.0.14",
+    "Microsoft.WindowsDesktop.App 10.0.14"
+  ],
+  "portableUiCases": 11,
+  "portableTargetCases": 11,
+  "isolatedInstallerCases": 10,
+  "isolatedUpgradeCases": 15,
+  "installedUiCases": 11,
+  "upgradedUiCases": 11,
+  "repeatedUiCasesNotAdditional": true,
+  "productionAppIdInstallationModified": false,
+  "realCredentialsAccessed": false,
+  "realApiVerified": false
+}
