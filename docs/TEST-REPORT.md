@@ -1,21 +1,37 @@
 # VoiceMite 0.1.0 测试与改名验证
 
-日期：2026-11-09（香港时间）。本页先记录 VoiceMite 当前版本的验证，再原文保留此前 VoiceInk 原型的历史测试。**旧报告的 99 项结果不能自动视为改名后重新测试通过。**
+日期：2026-11-09（香港时间）。环境：Windows 11 家庭版，x64；.NET SDK 10.0.403，发布运行库 .NET/WindowsDesktop 10.0.14。本页先记录 VoiceMite 当前版本验证，再原文保留 VoiceInk 原型历史测试。**旧报告的 99 项结果不自动视为改名后重新通过。**
 
 ## VoiceMite 当前验证
 
 | 范围 | 结果 | 证据与边界 |
 | --- | --- | --- |
-| 改名后 Release 构建 | 待运行 | 项目、命名空间、资源和可执行文件统一为 VoiceMite |
-| 核心与配置兼容测试 | 待运行 | 新配置优先、旧 VoiceInk 配置兼容、不合并或搬移密钥 |
-| 工作线程隔离测试 | 待运行 | 模拟原生服务与真实 STA 调度器，不等于真实输入框 |
-| 双语界面与悬浮图标集成 | 待运行 | 与历史截图分开保存，不用文字改名冒充新截图 |
-| 新安装、重装、卸载及启动 | 待运行 | 只使用隔离安装目录，静默卸载保留配置 |
-| VoiceInk → VoiceMite 安装升级 | 待运行 | 保留安装标识、运行互斥与旧配置，限于删除已知旧程序文件/快捷方式 |
-| 真实中文 STT → LLM | 未测试 | 没有使用真实 API 密钥，不将模拟服务当作云端验证 |
-| Chrome、多显示器/DPI、休眠、高权限 | 未测试 | 未实际操作的项目继续保留未测试状态 |
+| 改名后 Release 构建 | 通过，0 警告/错误 | VoiceMite.sln 的 6 个项目实际构建；发布入口、资源与可执行文件已改名 |
+| 核心/协议/配置兼容测试 | 通过，28 项 | 实际运行 VoiceMite.Tests；包括新配置优先、旧 VoiceInk 配置兼容、正式/演示隔离和不复制文件 |
+| 工作线程隔离 | 通过，5 项 | [结果](evidence/rebrand/worker-tests.json)；真实 STA 调度器与模拟原生服务，不等于真实输入框测试 |
+| 双语界面与控制器 | 通过，11 项 | [结果](evidence/rebrand/ui/ui-tests.json)；[中文面板](evidence/rebrand/ui/panel-zh-CN.png)、[英文面板](evidence/rebrand/ui/panel-en.png)，均为自己的 WPF 渲染 |
+| 实际图标/目标捕获/插入集成 | 通过，10 项 | [结果](evidence/rebrand/target/target-tests.json)；实际鼠标点击、不夺焦点、真实 STA 插入与防重复 |
+| Windows 原生控件/录音/剪贴板/密钥 | 通过，22 项 | [结果](evidence/rebrand/windows-tests.json)；实际设备启停、WPF 目标、DPAPI 与剪贴板 |
+| Edge / 记事本 | 通过，16 项 | [结果](evidence/rebrand/external-tests.json)；Edge 本地隔离页面与新建记事本测试文件，不推广为所有网站支持 |
+| 旧密钥机制兼容 | 通过，4 项 | [结果](evidence/rebrand/legacy-profile-tests.json)；实际旧 VoiceInk 二进制加密合成测试值，新 VoiceMite 解密/替换/删除；未读取真实密钥 |
+| GitHub Actions | 通过 | [已完成运行 e7b3b92](https://github.com/cynic004/VoiceMite/actions/runs/42637877459)：Windows 构建、核心 28 项、模拟目标 STA 5 项、便携/源码打包与产物上传；不测试麦克风或云端 API |
+| 正式 AppId 安装/升级复测 | 安全停止，未执行 | [保护记录](evidence/rebrand/production-installer-guard.json)；发现已有用户 VoiceInk 安装，未覆盖、卸载或修改它 |
+| 隔离测试身份的新安装/重装/卸载 | 通过，10 项 | [结果](evidence/rebrand/install-tests.json)；实际程序二进制与正式发布一致，仅安装身份/快捷方式不同，不等于正式 AppId 已执行 |
+| 隔离身份 VoiceInk → VoiceMite 升级 | 通过，15 项 | [结果](evidence/rebrand/upgrade-tests.json)、[隔离范围与原安装保护](evidence/rebrand/isolated-installer-identity.json)；旧目录复用、已知旧文件/快捷方式清理、配置保留与卸载 |
+| 最终便携版直接启动 | 通过，11 项重复验证 | [结果](evidence/rebrand/ui-portable/ui-tests.json)；实际运行自包含 VoiceMite.exe，退出码 0；不重复累加界面用例 |
+| 安装/升级后的程序启动 | 通过，11 项重复验证 | [安装启动](evidence/rebrand/installed-startup.json)、[升级后界面](evidence/rebrand/upgrade-ui-tests.json)；实际发布 DLL 哈希匹配；独立测试配置，无麦克风/API |
+| 真实中文 STT → LLM | 未测试 | 没有使用真实 API 密钥；不能用模拟服务或静音连接测试证明中文云端识别质量 |
+| Chrome、多显示器/DPI、休眠、高权限 | 未测试 | 无麦克风、系统拒绝麦克风权限及持续剪贴板占用同样未实测 |
 
-当前兼容策略：安装 AppId 及 `Local\VoiceInk.Desktop.v1` 互斥标识保持不变；新用户使用 VoiceMite 配置目录，已有 VoiceInk 用户可继续使用原目录。升级不移动、合并或删除用户配置。只有交互卸载明确选择删除时，才删除提示中列出的 VoiceMite 与旧 VoiceInk 正式配置目录；演示配置单独保留。旧快捷方式与六个已知旧程序文件在升级时按固定路径清理，不递归删除安装目录。
+目标集成的初次运行遇到原剪贴板中存在不支持的格式，程序按设计返回 `ClipboardUnsupported` 并拒绝自动插入，[原始记录](evidence/rebrand/target/initial-clipboard-refusal.json)单独保留。采用明确的文本测试剪贴板后，未更改应用代码的复测 10 项全部通过；此保护性拒绝不被掩盖为成功粘贴。
+
+安装测试没有覆盖或卸载现有用户安装：生产 AppId 的预检发现已有 VoiceInk，因此停止。随后只在临时副本中替换安装 AppId、测试快捷方式名和安装器输出目录，保留实际旧/新程序二进制与升级逻辑。15 项升级测试确认旧目录被复用、六个旧文件和两个测试快捷方式被清理、新快捷方式创建、同版本重装及静默卸载保留合成数据。测试前后真实注册项和真实快捷方式保持不变；没有读写真实密钥或正式用户配置。**生产 AppId 的实际用户安装升级仍未执行**，不将隔离测试身份等同于该项通过。
+
+第一次隔离升级的功能流程已完成，但测试工具清理自己的空只读目录时失败，导致报告未落盘。改为非递归强制清理自己创建的空目录并先保存报告后，完整复测通过；未更改应用或升级逻辑。交互卸载中“明确删除正式配置”的分支仅作源码审查，未用真实用户数据执行。
+
+正式兼容策略：安装 AppId 和 `Local\VoiceInk.Desktop.v1` 互斥标识保持不变；新用户使用 VoiceMite 配置目录，已有 VoiceInk 用户继续使用原目录。升级不移动、合并或删除用户配置。只有交互卸载明确选择删除时，才删除提示中列出的 VoiceMite 与旧 VoiceInk 正式配置目录；演示配置单独保留。旧快捷方式与六个已知旧程序文件按固定路径清理，不递归删除安装目录。
+
+界面/目标测试现使用独立临时配置，默认自动清理；`--test-profile-root` 只在显式 smoke 测试模式生效，正常启动和持久演示配置行为不变。安装文件与应用尚未代码签名；测试不要求关闭安全防护，也不关闭同步软件等其他应用。
 
 ## 改名前 VoiceInk 历史报告（原文保留）
 

@@ -1,0 +1,8 @@
+{
+  "status": "passed",
+  "exitCode": 0,
+  "uiChecks": 11,
+  "classification": "installed-self-contained-own-WPF-render",
+  "liveVendorOrMicrophoneTest": false,
+  "repeatedCasesNotAdditionalChecks": true
+}

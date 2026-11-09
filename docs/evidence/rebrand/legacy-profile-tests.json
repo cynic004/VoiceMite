@@ -1,0 +1,23 @@
+{
+  "classification": "synthetic-secret-from-actual-legacy-binary",
+  "realCredentialsAccessed": false,
+  "networkRequestsMade": false,
+  "results": [
+    {
+      "name": "Existing legacy profile is reused without copying or creating a new profile",
+      "status": "passed"
+    },
+    {
+      "name": "VoiceMite decrypts synthetic DPAPI data produced by actual VoiceInk binary",
+      "status": "passed"
+    },
+    {
+      "name": "Renamed secret replacement remains readable by the legacy binary",
+      "status": "passed"
+    },
+    {
+      "name": "Deleting the reused secret removes it for both application names",
+      "status": "passed"
+    }
+  ]
+}

@@ -1,9 +1,9 @@
-param([string]$InstallerPath, [switch]$Ui)
+param([string]$InstallerPath, [switch]$Ui, [Guid]$AppId = 'B09FDC83-04D7-4515-94D6-54776D0E9196', [string]$ProfileDirectory, [string]$TestProfileRoot)
 . (Join-Path $PSScriptRoot 'common.ps1')
 if (-not $InstallerPath) { $InstallerPath = Join-Path $script:RepoRoot ("artifacts/VoiceMite-Setup-" + (Get-VoiceMiteVersion) + '-x64.exe') }
 $InstallerPath = [IO.Path]::GetFullPath($InstallerPath)
 if (-not (Test-Path -LiteralPath $InstallerPath)) { throw 'Build the installer first.' }
-$registration = 'HKCU:\Software\Microsoft\Windows\CurrentVersion\Uninstall\{B09FDC83-04D7-4515-94D6-54776D0E9196}_is1'
+$registration = 'HKCU:\Software\Microsoft\Windows\CurrentVersion\Uninstall\{' + $AppId.ToString().ToUpperInvariant() + '}_is1'
 if (Test-Path -LiteralPath $registration) { throw 'An existing VoiceMite installation is registered. Smoke testing will not replace it.' }
 try {
     $active = [Threading.Mutex]::OpenExisting('Local\VoiceInk.Desktop.v1')
@@ -17,7 +17,7 @@ $testId = [Guid]::NewGuid().ToString('N')
 $installDir = [IO.Path]::GetFullPath((Join-Path $script:RepoRoot ("artifacts/install-smoke-" + $testId)))
 $expectedPrefix = [IO.Path]::GetFullPath((Join-Path $script:RepoRoot 'artifacts')) + [IO.Path]::DirectorySeparatorChar
 if (-not $installDir.StartsWith($expectedPrefix, [StringComparison]::OrdinalIgnoreCase)) { throw 'Unexpected test directory.' }
-$dataDir = Get-VoiceMiteProfileDirectory
+$dataDir = if ($ProfileDirectory) { [IO.Path]::GetFullPath($ProfileDirectory) } else { Get-VoiceMiteProfileDirectory }
 $dataDirExisted = Test-Path -LiteralPath $dataDir -PathType Container
 $marker = Join-Path $dataDir ("installer-test-" + $testId + '.marker')
 New-Item -ItemType Directory -Force $dataDir | Out-Null
@@ -42,7 +42,9 @@ try {
     if ($Ui) {
         $uiOutput = Join-Path $script:RepoRoot ("artifacts/ui-smoke-installed-" + $testId)
         $uiStart = [DateTime]::UtcNow
-        $uiProcess = Start-Process -FilePath (Join-Path $installDir 'VoiceMite.exe') -ArgumentList @('--ui-smoke', ('"' + $uiOutput + '"')) -WindowStyle Hidden -Wait -PassThru
+        $uiArguments = @('--ui-smoke', ('"' + $uiOutput + '"'))
+        if ($TestProfileRoot) { $uiArguments += @('--test-profile-root', ('"' + [IO.Path]::GetFullPath($TestProfileRoot) + '"')) }
+        $uiProcess = Start-Process -FilePath (Join-Path $installDir 'VoiceMite.exe') -ArgumentList $uiArguments -WindowStyle Hidden -Wait -PassThru
         $uiProcess.WaitForExit(); $uiProcess.Refresh()
         $uiReport = Join-Path $uiOutput 'ui-tests.json'
         $uiPassed = @()
@@ -67,7 +69,7 @@ try {
 }
 finally {
     if (Test-Path -LiteralPath $marker) { Remove-Item -LiteralPath $marker -Force }
-    if (-not $dataDirExisted -and (Test-Path -LiteralPath $dataDir -PathType Container) -and @(Get-ChildItem -LiteralPath $dataDir -Force).Count -eq 0) { Remove-Item -LiteralPath $dataDir }
+    if (-not $dataDirExisted -and (Test-Path -LiteralPath $dataDir -PathType Container) -and @(Get-ChildItem -LiteralPath $dataDir -Force).Count -eq 0) { Remove-Item -LiteralPath $dataDir -Force }
     $evidenceDir = Join-Path $script:RepoRoot 'docs/evidence/rebrand'
     New-Item -ItemType Directory -Force $evidenceDir | Out-Null
     $results | ConvertTo-Json -Depth 5 | Set-Content -LiteralPath (Join-Path $evidenceDir 'install-tests.json') -Encoding utf8

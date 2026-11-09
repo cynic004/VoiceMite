@@ -1,0 +1,52 @@
+[
+  {
+    "name": "Per-user isolated install exits successfully",
+    "status": "passed",
+    "detail": "exit=0"
+  },
+  {
+    "name": "Installed executable and uninstaller exist",
+    "status": "passed",
+    "detail": ""
+  },
+  {
+    "name": "Installed application bytes match published application",
+    "status": "passed",
+    "detail": ""
+  },
+  {
+    "name": "Installation registered for current user",
+    "status": "passed",
+    "detail": ""
+  },
+  {
+    "name": "Same-version reinstall exits successfully",
+    "status": "passed",
+    "detail": "exit=0"
+  },
+  {
+    "name": "Reinstall retains existing personal-data marker",
+    "status": "passed",
+    "detail": ""
+  },
+  {
+    "name": "Silent uninstall exits successfully",
+    "status": "passed",
+    "detail": "exit=0"
+  },
+  {
+    "name": "Uninstall removes application executable",
+    "status": "passed",
+    "detail": ""
+  },
+  {
+    "name": "Silent uninstall retains existing personal-data marker",
+    "status": "passed",
+    "detail": ""
+  },
+  {
+    "name": "Uninstall removes current-user registration",
+    "status": "passed",
+    "detail": ""
+  }
+]

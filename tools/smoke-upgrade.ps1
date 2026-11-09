@@ -1,22 +1,22 @@
-param([string]$LegacyInstallerPath, [string]$InstallerPath, [switch]$Ui)
+param([string]$LegacyInstallerPath, [string]$InstallerPath, [switch]$Ui, [Guid]$AppId = 'B09FDC83-04D7-4515-94D6-54776D0E9196', [ValidatePattern('^[A-Za-z0-9.-]+$')][string]$LegacyShortcutName = 'VoiceInk', [ValidatePattern('^[A-Za-z0-9.-]+$')][string]$CurrentShortcutName = 'VoiceMite', [string]$ProfileDirectory, [string]$TestProfileRoot)
 . (Join-Path $PSScriptRoot 'common.ps1')
 if (-not $LegacyInstallerPath) { $LegacyInstallerPath = Join-Path $script:RepoRoot 'artifacts/VoiceInk-Setup-0.1.0-x64.exe' }
 if (-not $InstallerPath) { $InstallerPath = Join-Path $script:RepoRoot ("artifacts/VoiceMite-Setup-" + (Get-VoiceMiteVersion) + '-x64.exe') }
 foreach ($candidate in @($LegacyInstallerPath, $InstallerPath)) { if (-not (Test-Path -LiteralPath $candidate -PathType Leaf)) { throw 'Both the verified legacy and current installers are required.' } }
-$registration = 'HKCU:\Software\Microsoft\Windows\CurrentVersion\Uninstall\{B09FDC83-04D7-4515-94D6-54776D0E9196}_is1'
+$registration = 'HKCU:\Software\Microsoft\Windows\CurrentVersion\Uninstall\{' + $AppId.ToString().ToUpperInvariant() + '}_is1'
 if (Test-Path -LiteralPath $registration) { throw 'An existing VoiceInk/VoiceMite installation is registered. The upgrade smoke will not replace it.' }
 try { $active = [Threading.Mutex]::OpenExisting('Local\VoiceInk.Desktop.v1'); $active.Dispose(); throw 'Exit VoiceInk and VoiceMite before this opt-in desktop test.' }
 catch [Threading.WaitHandleCannotBeOpenedException] { }
 $programs = [Environment]::GetFolderPath([Environment+SpecialFolder]::Programs)
 $desktop = [Environment]::GetFolderPath([Environment+SpecialFolder]::DesktopDirectory)
-$legacyLinks = @((Join-Path $programs 'VoiceInk.lnk'), (Join-Path $desktop 'VoiceInk.lnk'))
-$currentLinks = @((Join-Path $programs 'VoiceMite.lnk'), (Join-Path $desktop 'VoiceMite.lnk'))
+$legacyLinks = @((Join-Path $programs ($LegacyShortcutName + '.lnk')), (Join-Path $desktop ($LegacyShortcutName + '.lnk')))
+$currentLinks = @((Join-Path $programs ($CurrentShortcutName + '.lnk')), (Join-Path $desktop ($CurrentShortcutName + '.lnk')))
 foreach ($shortcut in ($legacyLinks + $currentLinks)) { if (Test-Path -LiteralPath $shortcut) { throw 'An existing product shortcut is present. The smoke will not overwrite it.' } }
 $id = [Guid]::NewGuid().ToString('N')
 $installDir = [IO.Path]::GetFullPath((Join-Path $script:RepoRoot ('artifacts/upgrade-smoke-' + $id)))
 $allowedPrefix = [IO.Path]::GetFullPath((Join-Path $script:RepoRoot 'artifacts')) + [IO.Path]::DirectorySeparatorChar
 if (-not $installDir.StartsWith($allowedPrefix, [StringComparison]::OrdinalIgnoreCase)) { throw 'Unexpected upgrade test directory.' }
-$profile = Get-VoiceMiteProfileDirectory
+$profile = if ($ProfileDirectory) { [IO.Path]::GetFullPath($ProfileDirectory) } else { Get-VoiceMiteProfileDirectory }
 $profileExisted = Test-Path -LiteralPath $profile -PathType Container
 New-Item -ItemType Directory -Force $profile | Out-Null
 $marker = Join-Path $profile ('upgrade-test-' + $id + '.marker')
@@ -48,10 +48,14 @@ try {
     Check 'Renamed Start Menu and desktop shortcuts exist' (@($currentLinks | Where-Object { Test-Path -LiteralPath $_ }).Count -eq 2)
     Check 'Upgrade leaves profile retention marker unchanged' ((Test-Path -LiteralPath $marker) -and (Get-FileHash -LiteralPath $marker).Hash -eq $markerHash)
     Check 'Installed renamed DLL matches verified published DLL' ((Get-FileHash -LiteralPath (Join-Path $installDir 'VoiceMite.dll')).Hash -eq (Get-FileHash -LiteralPath (Join-Path $script:RepoRoot 'artifacts/VoiceMite-win-x64/VoiceMite.dll')).Hash)
+    $reinstallExit = Run-Setup $InstallerPath ($common + @('/LOG="' + (Join-Path $script:RepoRoot ('artifacts/upgrade-reinstall-' + $id + '.log')) + '"'))
+    Check 'Renamed same-version reinstall succeeds and preserves data' ($reinstallExit -eq 0 -and (Test-Path -LiteralPath $marker) -and (Get-FileHash -LiteralPath $marker).Hash -eq $markerHash) ("exit=$reinstallExit")
     if ($Ui) {
         $uiOutput = Join-Path $script:RepoRoot ('artifacts/ui-smoke-upgrade-' + $id)
         $started = [DateTime]::UtcNow
-        $process = Start-Process -FilePath (Join-Path $installDir 'VoiceMite.exe') -ArgumentList @('--ui-smoke', ('"' + $uiOutput + '"')) -WindowStyle Hidden -Wait -PassThru
+        $uiArguments = @('--ui-smoke', ('"' + $uiOutput + '"'))
+        if ($TestProfileRoot) { $uiArguments += @('--test-profile-root', ('"' + [IO.Path]::GetFullPath($TestProfileRoot) + '"')) }
+        $process = Start-Process -FilePath (Join-Path $installDir 'VoiceMite.exe') -ArgumentList $uiArguments -WindowStyle Hidden -Wait -PassThru
         $process.WaitForExit(); $process.Refresh()
         $report = Join-Path $uiOutput 'ui-tests.json'
         $checks = @()
@@ -74,7 +78,7 @@ finally {
         if ($registered -eq $installDir.TrimEnd('\')) { [void](Run-Setup $uninstaller @('/VERYSILENT','/SUPPRESSMSGBOXES','/NORESTART')) }
     }
     if (Test-Path -LiteralPath $marker) { Remove-Item -LiteralPath $marker -Force }
-    if (-not $profileExisted -and (Test-Path -LiteralPath $profile -PathType Container) -and @(Get-ChildItem -LiteralPath $profile -Force).Count -eq 0) { Remove-Item -LiteralPath $profile }
     $results | ConvertTo-Json -Depth 6 | Set-Content -LiteralPath (Join-Path $evidence 'upgrade-tests.json') -Encoding utf8
+    if (-not $profileExisted -and (Test-Path -LiteralPath $profile -PathType Container) -and @(Get-ChildItem -LiteralPath $profile -Force).Count -eq 0) { Remove-Item -LiteralPath $profile -Force }
 }
 Write-Output "Upgrade checks: $($results.Count) passed. Only isolated installers and synthetic retention data were used."

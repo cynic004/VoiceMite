@@ -1,0 +1,15 @@
+{
+  "classification": "isolated-installer-identity",
+  "productionAppIdTested": false,
+  "actualPublishedBinariesUsed": true,
+  "identityChanges": [
+    "temporary AppId",
+    "temporary shortcut names",
+    "temporary installer output directory"
+  ],
+  "realUserRegistrationUnchanged": true,
+  "realUserShortcutsUnchanged": true,
+  "realUserProfilesWritten": false,
+  "realCredentialsAccessed": false,
+  "status": "passed"
+}

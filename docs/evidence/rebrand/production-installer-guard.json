@@ -1,0 +1,9 @@
+{
+  "classification": "production-installer-safety-guard",
+  "status": "blocked",
+  "reason": "An existing user VoiceInk 0.1.0 installation uses the same stable product AppId outside generated test directories.",
+  "existingUserInstallationModified": false,
+  "existingShortcutsModified": false,
+  "realCredentialsAccessed": false,
+  "notAFunctionalInstallPass": true
+}

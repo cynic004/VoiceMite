@@ -1,0 +1,46 @@
+[
+  {
+    "name": "Demo sample is explicitly local and asks for purpose",
+    "status": "passed"
+  },
+  {
+    "name": "Original wording is preserved without LLM key",
+    "status": "passed"
+  },
+  {
+    "name": "zh-CN panel and settings render",
+    "status": "passed"
+  },
+  {
+    "name": "zh-CN service options update immediately on language change",
+    "status": "passed"
+  },
+  {
+    "name": "en panel and settings render",
+    "status": "passed"
+  },
+  {
+    "name": "en service options update immediately on language change",
+    "status": "passed"
+  },
+  {
+    "name": "Unconfigured LLM does not block transcribe-only",
+    "status": "passed"
+  },
+  {
+    "name": "Mouse target selection preserves the draft without recording",
+    "status": "passed"
+  },
+  {
+    "name": "Cancel clears editors and target",
+    "status": "passed"
+  },
+  {
+    "name": "Worker refuses a pre-cancelled insertion",
+    "status": "passed"
+  },
+  {
+    "name": "Worker Clear returns without blocking",
+    "status": "passed"
+  }
+]

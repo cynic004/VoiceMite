@@ -1,0 +1,77 @@
+[
+  {
+    "name": "Legacy VoiceInk installs into isolated test directory",
+    "status": "passed",
+    "detail": "exit=0"
+  },
+  {
+    "name": "Legacy Start Menu and desktop shortcuts exist",
+    "status": "passed",
+    "detail": ""
+  },
+  {
+    "name": "Renamed installer upgrades without requesting another directory",
+    "status": "passed",
+    "detail": "exit=0"
+  },
+  {
+    "name": "Same AppId preserves the previous install directory",
+    "status": "passed",
+    "detail": ""
+  },
+  {
+    "name": "All six known legacy runtime files are removed",
+    "status": "passed",
+    "detail": ""
+  },
+  {
+    "name": "Both known legacy shortcuts are removed",
+    "status": "passed",
+    "detail": ""
+  },
+  {
+    "name": "Renamed Start Menu and desktop shortcuts exist",
+    "status": "passed",
+    "detail": ""
+  },
+  {
+    "name": "Upgrade leaves profile retention marker unchanged",
+    "status": "passed",
+    "detail": ""
+  },
+  {
+    "name": "Installed renamed DLL matches verified published DLL",
+    "status": "passed",
+    "detail": ""
+  },
+  {
+    "name": "Renamed same-version reinstall succeeds and preserves data",
+    "status": "passed",
+    "detail": "exit=0"
+  },
+  {
+    "name": "Upgraded executable starts with all own-window UI checks passing",
+    "status": "passed",
+    "detail": "exit=0; checks=11; repeatedCasesNotAdditional=true"
+  },
+  {
+    "name": "Renamed silent uninstaller exits successfully",
+    "status": "passed",
+    "detail": "exit=0"
+  },
+  {
+    "name": "Renamed silent uninstall preserves the profile marker",
+    "status": "passed",
+    "detail": ""
+  },
+  {
+    "name": "Renamed executable and registration are removed",
+    "status": "passed",
+    "detail": ""
+  },
+  {
+    "name": "Renamed shortcuts are removed by uninstall",
+    "status": "passed",
+    "detail": ""
+  }
+]
