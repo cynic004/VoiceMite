@@ -1,0 +1,13 @@
+{
+  "application": "VoiceInk",
+  "version": "0.1.0",
+  "architecture": "win-x64",
+  "selfContained": true,
+  "sdk": "10.0.403",
+  "frameworks": [
+    "Microsoft.NETCore.App 10.0.14",
+    "Microsoft.WindowsDesktop.App 10.0.14"
+  ],
+  "builtUtc": "2026-11-09T12:24:52.9618386Z",
+  "signed": false
+}

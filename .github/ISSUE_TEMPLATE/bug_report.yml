@@ -1,0 +1,50 @@
+name: 错误报告 / Bug report
+description: 报告可复现的问题，请不要上传密钥、录音或私人输入内容。
+labels: []
+body:
+  - type: markdown
+    attributes:
+      value: |
+        请先查阅 README 与已知限制。安全漏洞请按 SECURITY.md 私下报告。
+        Do not include API keys, audio, private chat, clipboard data, or an unredacted screenshot.
+  - type: input
+    id: version
+    attributes:
+      label: VoiceMite 版本 / Version
+      placeholder: 例如 0.1.0；安装版或便携版
+    validations:
+      required: true
+  - type: input
+    id: environment
+    attributes:
+      label: Windows 与目标应用 / Windows and target app
+      description: 提供版本、缩放比例和输入框类型即可，无需窗口里的私人文字。
+      placeholder: Windows 11；Edge 157；125%；textarea
+    validations:
+      required: true
+  - type: textarea
+    id: reproduce
+    attributes:
+      label: 复现步骤 / Steps to reproduce
+      description: 尽量使用新记事本文件或不含私人内容的测试页面。
+    validations:
+      required: true
+  - type: textarea
+    id: behavior
+    attributes:
+      label: 预期与实际行为 / Expected and actual behavior
+    validations:
+      required: true
+  - type: input
+    id: error_code
+    attributes:
+      label: 安全错误代码 / Safe error code
+      description: 只提供本地化提示或错误类型；不要粘贴服务端原始响应。
+      placeholder: TargetChanged / ClipboardBusy / Timeout
+  - type: checkboxes
+    id: privacy
+    attributes:
+      label: 隐私确认 / Privacy
+      options:
+        - label: 我已移除 API 密钥、录音、私人消息和剪贴板内容。I removed secrets and private data.
+          required: true

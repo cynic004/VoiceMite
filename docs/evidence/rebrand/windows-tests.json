@@ -1,0 +1,112 @@
+[
+  {
+    "name": "DPAPI current-user encrypted round trip",
+    "status": "passed",
+    "detail": ""
+  },
+  {
+    "name": "DPAPI key replacement",
+    "status": "passed",
+    "detail": ""
+  },
+  {
+    "name": "DPAPI key deletion",
+    "status": "passed",
+    "detail": ""
+  },
+  {
+    "name": "Microphone enumeration does not start capture",
+    "status": "passed",
+    "detail": ""
+  },
+  {
+    "name": "Real microphone repeated start/stop/cancel, RAM-only PCM WAV",
+    "status": "passed",
+    "detail": ""
+  },
+  {
+    "name": "Blank TextBox Chinese/English/numbers/punctuation/emoji",
+    "status": "passed",
+    "detail": "Inserted/ actual=\u4E2D\u6587 English 123\uFF0C\u3002\uD83D\uDE42"
+  },
+  {
+    "name": "Blank TextBox Chinese/English/numbers/punctuation/emoji consumed target prevents duplicate",
+    "status": "passed",
+    "detail": ""
+  },
+  {
+    "name": "Middle caret insertion",
+    "status": "passed",
+    "detail": "Inserted/ actual=AB\u4E2D\u6587CDE"
+  },
+  {
+    "name": "Middle caret insertion consumed target prevents duplicate",
+    "status": "passed",
+    "detail": ""
+  },
+  {
+    "name": "Selection replacement",
+    "status": "passed",
+    "detail": "Inserted/ actual=A\uD83D\uDE42E"
+  },
+  {
+    "name": "Selection replacement consumed target prevents duplicate",
+    "status": "passed",
+    "detail": ""
+  },
+  {
+    "name": "Multiline paste without Enter key",
+    "status": "passed",
+    "detail": "Inserted/ actual=\u7B2C\u4E00\u884C\nEnglish 456\uD83D\uDE42\n\u672B\u884C"
+  },
+  {
+    "name": "Multiline paste without Enter key consumed target prevents duplicate",
+    "status": "passed",
+    "detail": ""
+  },
+  {
+    "name": "RichTextBox editable area",
+    "status": "passed",
+    "detail": "Inserted/ actual=\u5BCC\u6587\u672C\nRich\uD83D\uDE42"
+  },
+  {
+    "name": "RichTextBox editable area consumed target prevents duplicate",
+    "status": "passed",
+    "detail": ""
+  },
+  {
+    "name": "Password target blocked",
+    "status": "passed",
+    "detail": ""
+  },
+  {
+    "name": "Read-only target blocked",
+    "status": "passed",
+    "detail": ""
+  },
+  {
+    "name": "Moved caret invalidates captured target",
+    "status": "passed",
+    "detail": ""
+  },
+  {
+    "name": "Changed contents invalidate captured target",
+    "status": "passed",
+    "detail": ""
+  },
+  {
+    "name": "Unsupported image clipboard safely refused",
+    "status": "passed",
+    "detail": "Capture: Insert:ClipboardUnsupported"
+  },
+  {
+    "name": "New clipboard copy is not overwritten by restoration",
+    "status": "passed",
+    "detail": "Capture: Insert:Inserted"
+  },
+  {
+    "name": "Closed target invalidates insertion",
+    "status": "passed",
+    "detail": ""
+  }
+]

@@ -1,0 +1,82 @@
+[
+  {
+    "name": "Edge ordinary input Chinese/English/emoji",
+    "status": "passed",
+    "detail": "Inserted/ actual=\u4E2D\u6587 Edge123\uD83D\uDE42"
+  },
+  {
+    "name": "Edge ordinary input Chinese/English/emoji consumed target prevents duplicate",
+    "status": "passed",
+    "detail": ""
+  },
+  {
+    "name": "Edge multiline textarea",
+    "status": "passed",
+    "detail": "Inserted/ actual=\u4E2D\u6587\nEnglish123\uD83D\uDE42\n\u672B\u884C"
+  },
+  {
+    "name": "Edge multiline textarea consumed target prevents duplicate",
+    "status": "passed",
+    "detail": ""
+  },
+  {
+    "name": "Edge contenteditable area",
+    "status": "passed",
+    "detail": "Inserted/ actual=\u53EF\u7F16\u8F91\ncontent\uD83D\uDE42"
+  },
+  {
+    "name": "Edge contenteditable area consumed target prevents duplicate",
+    "status": "passed",
+    "detail": ""
+  },
+  {
+    "name": "Edge password refused",
+    "status": "passed",
+    "detail": ""
+  },
+  {
+    "name": "Edge no automatic submission",
+    "status": "passed",
+    "detail": ""
+  },
+  {
+    "name": "Notepad blank Chinese/English/emoji",
+    "status": "passed",
+    "detail": "Inserted/ actual=\u8BB0\u4E8B\u672C Notepad123\uD83D\uDE42"
+  },
+  {
+    "name": "Notepad blank Chinese/English/emoji consumed target prevents duplicate",
+    "status": "passed",
+    "detail": ""
+  },
+  {
+    "name": "Notepad middle caret",
+    "status": "passed",
+    "detail": "Inserted/ actual=AB\u4E2D\u6587CDE"
+  },
+  {
+    "name": "Notepad middle caret consumed target prevents duplicate",
+    "status": "passed",
+    "detail": ""
+  },
+  {
+    "name": "Notepad selection replacement",
+    "status": "passed",
+    "detail": "Inserted/ actual=A\uD83D\uDE42E"
+  },
+  {
+    "name": "Notepad selection replacement consumed target prevents duplicate",
+    "status": "passed",
+    "detail": ""
+  },
+  {
+    "name": "Notepad multiline",
+    "status": "passed",
+    "detail": "Inserted/ actual=\u7B2C\u4E00\u884C\nEnglish\uD83D\uDE42\n\u672B\u884C"
+  },
+  {
+    "name": "Notepad multiline consumed target prevents duplicate",
+    "status": "passed",
+    "detail": ""
+  }
+]

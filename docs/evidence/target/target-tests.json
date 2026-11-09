@@ -1,0 +1,52 @@
+[
+  {
+    "name": "Local original-text draft is ready without API or recording",
+    "status": "passed",
+    "detail": ""
+  },
+  {
+    "name": "Target selection hides panel and waits without recording",
+    "status": "passed",
+    "detail": ""
+  },
+  {
+    "name": "Floating orb has WS_EX_NOACTIVATE",
+    "status": "passed",
+    "detail": ""
+  },
+  {
+    "name": "Mouse selects isolated fixture input",
+    "status": "passed",
+    "detail": ""
+  },
+  {
+    "name": "Orb click keeps original foreground window",
+    "status": "passed",
+    "detail": ""
+  },
+  {
+    "name": "Orb click captures target through real STA worker without recording",
+    "status": "passed",
+    "detail": ""
+  },
+  {
+    "name": "Review panel can take foreground before explicit insert",
+    "status": "passed",
+    "detail": ""
+  },
+  {
+    "name": "Explicit insert restores target and pastes through real STA worker",
+    "status": "passed",
+    "detail": ""
+  },
+  {
+    "name": "Successful insert consumes target",
+    "status": "passed",
+    "detail": ""
+  },
+  {
+    "name": "Second insert cannot duplicate consumed target",
+    "status": "passed",
+    "detail": ""
+  }
+]

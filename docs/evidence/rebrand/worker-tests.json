@@ -1,0 +1,42 @@
+{
+  "suite": "VoiceMite.WorkerTests",
+  "testedAtUtc": "2026-11-09T14:33:12.2207667+00:00",
+  "environment": "Microsoft Windows NT 10.0.26200.0",
+  "classification": "simulated-native-service-with-real-Windows-STA-dispatcher",
+  "noDesktopInputInjected": true,
+  "liveVendorOrMicrophoneTest": false,
+  "passed": 5,
+  "failed": 0,
+  "results": [
+    {
+      "Name": "dedicated_sta_and_single_thread",
+      "Status": "passed",
+      "ElapsedMilliseconds": 138.4738,
+      "Failure": null
+    },
+    {
+      "Name": "500_fast_completions_without_disposed_token_races",
+      "Status": "passed",
+      "ElapsedMilliseconds": 105.762,
+      "Failure": null
+    },
+    {
+      "Name": "timeout_bounded_queue_late_state_isolation_and_recovery",
+      "Status": "passed",
+      "ElapsedMilliseconds": 113.5196,
+      "Failure": null
+    },
+    {
+      "Name": "clear_cancels_active_work_and_clears_native_state",
+      "Status": "passed",
+      "ElapsedMilliseconds": 32.1239,
+      "Failure": null
+    },
+    {
+      "Name": "nonblocking_disposal_with_unresponsive_operation",
+      "Status": "passed",
+      "ElapsedMilliseconds": 6.573,
+      "Failure": null
+    }
+  ]
+}

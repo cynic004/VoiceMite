@@ -1,0 +1,21 @@
+name: 功能建议 / Feature request
+description: 描述鼠标使用场景和希望改善的具体行为。
+body:
+  - type: textarea
+    id: problem
+    attributes:
+      label: 使用场景与问题 / Scenario and problem
+      description: 使用虚构例子，不要提交私人聊天或录音。
+    validations:
+      required: true
+  - type: textarea
+    id: outcome
+    attributes:
+      label: 希望得到的行为 / Desired behavior
+      description: 请说明鼠标操作、兼容性或隐私方面的要求。
+    validations:
+      required: true
+  - type: textarea
+    id: alternatives
+    attributes:
+      label: 现有替代方式 / Alternatives

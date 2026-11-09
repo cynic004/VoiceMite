@@ -1,0 +1,134 @@
+name: Prepare draft Windows release
+
+# A maintainer chooses an existing version tag. Successful builds create a draft,
+# never silently replace or publish an existing release and its tested assets.
+on:
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: 'Existing version tag, for example v0.1.0'
+        required: true
+        type: string
+
+permissions:
+  contents: read
+
+concurrency:
+  group: release-${{ inputs.tag }}
+  cancel-in-progress: false
+
+jobs:
+  package:
+    name: Verify tag and prepare a draft
+    runs-on: windows-2025
+    timeout-minutes: 35
+    permissions:
+      contents: write
+    env:
+      DOTNET_CLI_TELEMETRY_OPTOUT: '1'
+      DOTNET_NOLOGO: '1'
+      RELEASE_TAG: ${{ inputs.tag }}
+    defaults:
+      run:
+        shell: pwsh
+    steps:
+      - name: Validate the selected tag
+        run: |
+          if ($env:RELEASE_TAG -notmatch '^v[0-9]+\.[0-9]+\.[0-9]+$') {
+            throw 'Choose an existing vMAJOR.MINOR.PATCH tag.'
+          }
+
+      - name: Check out the tagged source
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: refs/tags/${{ inputs.tag }}
+          persist-credentials: false
+
+      - name: Verify the tag agrees with the application version
+        run: |
+          [xml]$properties = Get-Content Directory.Build.props -Raw
+          $version = [string]$properties.Project.PropertyGroup.Version
+          if ($env:RELEASE_TAG -ne "v$version") {
+            throw 'Tag and Directory.Build.props version do not match.'
+          }
+          "RELEASE_VERSION=$version" >> $env:GITHUB_ENV
+
+      - name: Install the SDK from global.json
+        uses: actions/setup-dotnet@0f4a354dd5547a28c70b7853dbd95d5b67886e73 # v6.1.0
+        with:
+          global-json-file: global.json
+
+      - name: Build all projects
+        run: dotnet build VoiceMite.sln --configuration Release --nologo
+
+      - name: Run core protocol and state checks
+        run: dotnet run --project tests/VoiceMite.Tests/VoiceMite.Tests.csproj --configuration Release --no-build
+
+      - name: Run STA isolation checks with a simulated target
+        run: dotnet run --project tests/VoiceMite.WorkerTests/VoiceMite.WorkerTests.csproj --configuration Release --no-build -- --report artifacts/ci/worker-tests.json
+
+      - name: Install the pinned, verified Inno Setup compiler
+        run: |
+          $ErrorActionPreference = 'Stop'
+          $installer = Join-Path $env:RUNNER_TEMP 'innosetup-7.1.1-x64.exe'
+          Invoke-WebRequest 'https://github.com/jrsoftware/issrc/releases/download/is-7_1_1/innosetup-7.1.1-x64.exe' -OutFile $installer
+          $expectedHash = '8a5a6711c3766a6e5fb74f280ba0e3551e719ce94538d901fdbd1f8f9920b3f0'
+          if ((Get-FileHash -LiteralPath $installer -Algorithm SHA256).Hash.ToLowerInvariant() -ne $expectedHash) {
+            throw 'Inno Setup download did not match the pinned SHA-256.'
+          }
+          $signature = Get-AuthenticodeSignature -LiteralPath $installer
+          if ($signature.Status -ne 'Valid' -or $signature.SignerCertificate.Subject -notmatch '(^|,\s*)O=Pyrsys B\.V\.') {
+            throw 'Inno Setup download did not have the expected valid publisher signature.'
+          }
+          $compilerDirectory = Join-Path $env:RUNNER_TEMP 'VoiceMite-Inno'
+          $setup = Start-Process -FilePath $installer -ArgumentList @('/VERYSILENT', '/SUPPRESSMSGBOXES', '/NORESTART', '/SP-', '/CURRENTUSER', "/DIR=$compilerDirectory") -Wait -PassThru -WindowStyle Hidden
+          if ($setup.ExitCode -ne 0) { throw "Inno Setup installation failed: $($setup.ExitCode)." }
+          $compiler = Join-Path $compilerDirectory 'ISCC.exe'
+          if (-not (Test-Path -LiteralPath $compiler)) { throw 'Inno Setup compiler was not installed.' }
+          "INNO_COMPILER=$compiler" >> $env:GITHUB_ENV
+
+      - name: Build the self-contained archives and unsigned installer
+        run: ./tools/publish.ps1 -DotNetPath (Get-Command dotnet).Source -InnoCompilerPath $env:INNO_COMPILER
+
+      - name: Validate release files and write review notes
+        run: |
+          $version = $env:RELEASE_VERSION
+          $required = @("VoiceMite-Setup-$version-x64.exe", "VoiceMite-$version-win-x64-portable.zip", "VoiceMite-$version-source.zip", 'SHA256SUMS.txt')
+          foreach ($file in $required) {
+            if (-not (Test-Path -LiteralPath (Join-Path 'artifacts' $file))) { throw "Missing release file: $file" }
+          }
+          @'
+          Windows x64 build prepared from the selected version tag.
+
+          This release is a draft. Review the test report and manually verify the installer and target applications before publishing.
+
+          The application and installer are unsigned. No real STT/LLM request, microphone recording, browser target, elevated target, multi-monitor/DPI, or sleep/resume test is run by this workflow. Core tests use simulated services; STA tests use a simulated native target. Do not describe this build as fully tested against real API services.
+
+          Configure your own independent STT and LLM services. Audio and text may be sent to those configured services; see README and the privacy documentation.
+          '@ | Set-Content -LiteralPath artifacts/RELEASE-NOTES.md -Encoding utf8
+
+      - name: Keep a build artifact for review
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: VoiceMite-${{ inputs.tag }}-review
+          path: |
+            artifacts/VoiceMite-Setup-*-x64.exe
+            artifacts/VoiceMite-*-win-x64-portable.zip
+            artifacts/VoiceMite-*-source.zip
+            artifacts/SHA256SUMS.txt
+            artifacts/RELEASE-NOTES.md
+            artifacts/ci/worker-tests.json
+          if-no-files-found: error
+          compression-level: 0
+          retention-days: 30
+
+      - name: Create a draft without replacing existing release assets
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+        run: |
+          gh release view $env:RELEASE_TAG --repo $env:GH_REPO *> $null
+          if ($LASTEXITCODE -eq 0) { throw 'A release already exists for this tag. It was not modified.' }
+          $version = $env:RELEASE_VERSION
+          gh release create $env:RELEASE_TAG --verify-tag --draft --title "VoiceMite $version" --notes-file artifacts/RELEASE-NOTES.md "artifacts/VoiceMite-Setup-$version-x64.exe" "artifacts/VoiceMite-$version-win-x64-portable.zip" "artifacts/VoiceMite-$version-source.zip" artifacts/SHA256SUMS.txt
+          if ($LASTEXITCODE -ne 0) { throw 'Creating the draft release failed.' }
