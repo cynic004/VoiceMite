@@ -47,8 +47,7 @@ try {
         $sourceRootPath = Join-Path $script:RepoRoot $sourceRoot
         if (-not (Test-Path -LiteralPath $sourceRootPath)) { continue }
         Get-ChildItem -LiteralPath $sourceRootPath -Recurse -File -Force | Where-Object {
-            $_.FullName -notmatch '[\\/](bin|obj|\.git|\.tools|artifacts|secrets)[\\/]'
-            -and $_.Name -notmatch '(?i)(\.dpapi$|^\.env(?:\.|$)|\.user$|\.log$)'
+            ($_.FullName -notmatch '[\\/](bin|obj|\.git|\.tools|artifacts|secrets)[\\/]') -and ($_.Name -notmatch '(?i)(\.dpapi$|^\.env(?:\.|$)|\.user$|\.log$)')
         } | Sort-Object FullName | ForEach-Object {
             $entryName = [IO.Path]::GetRelativePath($script:RepoRoot, $_.FullName).Replace('\','/')
             [IO.Compression.ZipFileExtensions]::CreateEntryFromFile($sourceArchive, $_.FullName, $entryName, [IO.Compression.CompressionLevel]::Optimal) | Out-Null
