@@ -90,7 +90,7 @@ jobs:
       - name: Build the self-contained archives and unsigned installer
         run: ./tools/publish.ps1 -DotNetPath (Get-Command dotnet).Source -InnoCompilerPath $env:INNO_COMPILER
 
-      - name: Validate release files and write review notes
+      - name: Validate release files and write release notes
         run: |
           $version = $env:RELEASE_VERSION
           $required = @("VoiceMite-Setup-$version-x64.exe", "VoiceMite-$version-win-x64-portable.zip", "VoiceMite-$version-source.zip", 'SHA256SUMS.txt')
@@ -98,13 +98,13 @@ jobs:
             if (-not (Test-Path -LiteralPath (Join-Path 'artifacts' $file))) { throw "Missing release file: $file" }
           }
           @'
-          Windows x64 build prepared from the selected version tag.
+          VoiceMite Windows x64 版本。
 
-          This release is a draft. Review the test report and manually verify the installer and target applications before publishing.
+          下载 Setup 安装包，或解压 portable.zip 后运行 VoiceMite.exe。发布文件附带 SHA256SUMS.txt 校验值；应用和安装包尚未代码签名。
 
-          The application and installer are unsigned. No real STT/LLM request, microphone recording, browser target, elevated target, multi-monitor/DPI, or sleep/resume test is run by this workflow. Core tests use simulated services; STA tests use a simulated native target. Do not describe this build as fully tested against real API services.
+          首次使用请分别配置 STT 语音转写和 LLM 文字整理服务，也可先用离线演示模式体验界面。音频发送至配置的 STT 服务，文字发送至配置的 LLM 服务。
 
-          Configure your own independent STT and LLM services. Audio and text may be sent to those configured services; see README and the privacy documentation.
+          此构建已完成核心和 STA 工作线程自动化测试，使用模拟服务及目标。桌面与真实 API 测试结果请查看该版本源码包中的 docs/TEST-REPORT.md；使用步骤、数据处理和已知限制见 README.md。
           '@ | Set-Content -LiteralPath artifacts/RELEASE-NOTES.md -Encoding utf8
 
       - name: Keep a build artifact for review
